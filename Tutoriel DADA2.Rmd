@@ -2,7 +2,8 @@
 title: "Tutoriel DADA2"
 output: github_document
 ---
-Téléchargement de DADA2 :
+
+### Téléchargement de DADA2 :
 
 ```{r}
 BiocManager::install("dada2", version = "3.18")
@@ -10,7 +11,7 @@ library(dada2)
 
 ```
 
-Unzip des données :
+### Unzip des données :
 
 ```{r}
 unzip("/Users/azeli/Documents/ADM/Tuto-DADA2/miseqsopdata.zip")
@@ -18,7 +19,7 @@ path <- "/Users/azeli/Documents/ADM/Tuto-DADA2/MiSeq_SOP"
 list.files(path)
 ```
 
-Regroupement des forward et reverse :
+### Regroupement des forward et reverse :
 
 ```{r}
 fnFs <- sort(list.files(path, pattern= "_R1_001.fastq", full.names = TRUE))
@@ -33,9 +34,9 @@ Graphique représentant les profiles de qualité des séquences forward.
 plotQualityProfile(fnRs[1:2])
 ```
 
-Graphique représentant les profiles de qualité des séquences reverse. 
+Graphique représentant les profiles de qualité des séquences reverse.
 
-Création d'un nouveau dossier "filtered" dans le directory :
+### Création d'un nouveau dossier "filtered" dans le directory et filtration des séquences :
 
 ```{r }
 filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
@@ -43,9 +44,33 @@ filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE)
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress = TRUE, multithread = FALSE)
+
+head(out)
 ```
 
+### Création du modèle de calcul des erreurs à partir du jeu de données :
 
+```{r}
+errF <- learnErrors(filtFs, multithread = FALSE)
+errR <- learnErrors(filtRs, multithread = FALSE)
 
+plotErrors(errF, nominalQ = TRUE)
+```
+
+### Correction des erreurs et détection des vrais variants :
+
+```{r}
+dadaFs <- dada(filtFs, err=errF, multithread=FALSE)
+dadaRs <- dada(filtRs, err=errR, multithread=FALSE)
+
+dadaFs[[1]]
+```
+
+### Alignement des séquences forward et reverse :
+
+```{r}
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+head(mergers[[1]])
+```
 
