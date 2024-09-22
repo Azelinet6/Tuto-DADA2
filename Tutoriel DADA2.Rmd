@@ -6,7 +6,6 @@ output: github_document
 ### Téléchargement de DADA2 :
 
 ```{r}
-BiocManager::install("dada2", version = "3.18")
 library(dada2)
 
 ```
@@ -73,4 +72,43 @@ dadaFs[[1]]
 mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
+
+### Construction table d'observation
+
+```{r}
+seqtab <- makeSequenceTable(mergers)
+dim(seqtab)
+```
+
+```{r}
+table(nchar(getSequences(seqtab)))
+```
+
+### Elimination des chimères :
+
+```{r}
+seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=FALSE, verbose=TRUE)
+dim(seqtab.nochim)
+```
+
+```{r}
+sum(seqtab.nochim)/sum(seqtab)
+```
+
+### Tableau récapitulatif du nombre de séquences enlevées à chaque étape :
+
+```{r}
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+head(track)
+```
+### Taxonomie
+
+```{r}
+unzip("/Users/azeli/Documents/ADM/Tuto-DADA2/silva_nr99_v138.1_train_set.fa.gz")
+taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_train_set.fa.gz", multithread=FALSE)
+```
+
 
