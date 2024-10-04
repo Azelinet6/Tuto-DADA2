@@ -13,7 +13,7 @@ library(dada2)
 ### Unzip des données :
 
 ```{r}
-path <- "/home/rstudio/tuto DADA2/Tuto-DADA2/MiSeq_SOP"
+path <- "/home/rstudio/Tuto DADA 2/Tuto-DADA2/MiSeq_SOP"
 list.files(path)
 ```
 
@@ -42,7 +42,7 @@ filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress = TRUE, multithread = FALSE)
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress = TRUE, multithread = TRUE)
 
 head(out)
 ```
@@ -50,8 +50,8 @@ head(out)
 ### Création du modèle de calcul des erreurs à partir du jeu de données :
 
 ```{r}
-errF <- learnErrors(filtFs, multithread = FALSE)
-errR <- learnErrors(filtRs, multithread = FALSE)
+errF <- learnErrors(filtFs, multithread = TRUE)
+errR <- learnErrors(filtRs, multithread = TRUE)
 
 plotErrors(errF, nominalQ = TRUE)
 ```
@@ -59,8 +59,8 @@ plotErrors(errF, nominalQ = TRUE)
 ### Correction des erreurs et détection des vrais variants :
 
 ```{r}
-dadaFs <- dada(filtFs, err=errF, multithread=FALSE)
-dadaRs <- dada(filtRs, err=errR, multithread=FALSE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 
 dadaFs[[1]]
 ```
@@ -86,7 +86,7 @@ table(nchar(getSequences(seqtab)))
 ### Elimination des chimères :
 
 ```{r}
-seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=FALSE, verbose=TRUE)
+seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=TRUE, verbose=TRUE)
 dim(seqtab.nochim)
 ```
 
@@ -106,8 +106,22 @@ head(track)
 ### Taxonomie
 
 ```{r}
-unzip("/Users/azeli/Documents/ADM/Tuto-DADA2/silva_nr99_v138.1_train_set.fa.gz")
-taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_train_set.fa.gz", multithread=FALSE)
+taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
+taxa.print <- taxa
+row.names(taxa.print) <- NULL
+head(taxa.print)
+```
+### Mesure de la précision de DADA2
+
+```{r}
+unqs.mock <- seqtab.nochim["Mock",]
+unqs.mock <- sort(unqs.mock[unqs.mock>0], decreasing=TRUE)
+cat("DADA2 inferred", length(unqs.mock), "sample sequences present in the Mock community.\n")
 ```
 
+```{r}
+mock.ref <- getSequences(file.path(path, "HMP_MOCK.v35.fasta"))
+match.ref <- sum(sapply(names(unqs.mock), function(x) any(grepl(x, mock.ref))))
+cat("Of those,", sum(match.ref), "were exact matches to the expected reference sequences.\n")
+```
 
