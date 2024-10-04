@@ -26,13 +26,13 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 plotQualityProfile(fnFs[1:2])
 ```
 
-*Graphique représentant les profiles de qualité des séquences forward.*
+*Graphique représentant les profils de qualité des séquences forward.*
 
 ```{r}
 plotQualityProfile(fnRs[1:2])
 ```
 
-*Graphique représentant les profiles de qualité des séquences reverse.*
+*Graphique représentant les profils de qualité des séquences reverse.*
 
 ### Création d'un nouveau dossier "filtered" dans le directory et filtration des séquences
 
@@ -65,14 +65,14 @@ dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 dadaFs[[1]]
 ```
 
-### Alignement des séquences forward et reverse
+### Alignement et fusion des séquences forward et reverse
 
 ```{r}
 mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
 
-### Construction table d'observation
+### Construction d'une table d'observation
 
 ```{r}
 seqtab <- makeSequenceTable(mergers)
@@ -83,7 +83,7 @@ dim(seqtab)
 table(nchar(getSequences(seqtab)))
 ```
 
-### Elimination des chimères :
+### Elimination des chimères
 
 ```{r}
 seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=TRUE, verbose=TRUE)
@@ -113,7 +113,7 @@ row.names(taxa.print) <- NULL
 head(taxa.print)
 ```
 
-### Mesure de la précision de DADA2
+### Mesure de la précision de l'analyse
 
 ```{r}
 unqs.mock <- seqtab.nochim["Mock",]
@@ -162,7 +162,7 @@ taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
 ps
 ```
 
-## Visualisation de la diversité alpha
+#### Visualisation de la diversité alpha
 
 ```{r}
 plot_richness(ps, x="Day", measures=c("Shannon", "Simpson"), color="When")
