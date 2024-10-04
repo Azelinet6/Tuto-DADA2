@@ -80,7 +80,7 @@ head(out)
     ## F3D143_S209_L001_R1_001.fastq     3178      2941
     ## F3D144_S210_L001_R1_001.fastq     4827      4312
 
-### Création du modèle de calcul des erreurs à partir du jeu de données
+### Création du modèle d'erreur à partir du jeu de données
 
 ``` r
 errF <- learnErrors(filtFs, multithread = TRUE)
@@ -98,10 +98,8 @@ errR <- learnErrors(filtRs, multithread = TRUE)
 plotErrors(errF, nominalQ = TRUE)
 ```
 
-    ## Warning: Transformation introduced infinite values in continuous y-axis
-    ## Transformation introduced infinite values in continuous y-axis
-
 ![](Tutoriel-DADA2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
 
 ### Correction des erreurs et détection des vrais variants
 
@@ -213,7 +211,7 @@ mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
 
-    ##                                                                                                                                                                                                                                                       sequence
+    ##                                                                                                                                                                                                                                        sequence
     ## 1 TACGGAGGATGCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGTGCGCAGGCGGAAGATCAAGTCAGCGGTAAAATTGAGAGGCTCAACCTCTTCGAGCCGTTGAAACTGGTTTTCTTGAGTGAGCGAGAAGTATGCGGAATGCGTGGTGTAGCGGTGAAATGCATAGATATCACGCAGAACTCCGATTGCGAAGGCAGCATACCGGCGCTCAACTGACGCTCATGCACGAAAGTGTGGGTATCGAACAGG
     ## 2 TACGGAGGATGCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGTGCGTAGGCGGCCTGCCAAGTCAGCGGTAAAATTGCGGGGCTCAACCCCGTACAGCCGTTGAAACTGCCGGGCTCGAGTGGGCGAGAAGTATGCGGAATGCGTGGTGTAGCGGTGAAATGCATAGATATCACGCAGAACCCCGATTGCGAAGGCAGCATACCGGCGCCCTACTGACGCTGAGGCACGAAAGTGCGGGGATCAAACAGG
     ## 3 TACGGAGGATGCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGTGCGTAGGCGGGCTGTTAAGTCAGCGGTCAAATGTCGGGGCTCAACCCCGGCCTGCCGTTGAAACTGGCGGCCTCGAGTGGGCGAGAAGTATGCGGAATGCGTGGTGTAGCGGTGAAATGCATAGATATCACGCAGAACTCCGATTGCGAAGGCAGCATACCGGCGCCCGACTGACGCTGAGGCACGAAAGCGTGGGTATCGAACAGG
