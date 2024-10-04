@@ -13,8 +13,7 @@ library(dada2)
 ### Unzip des données :
 
 ```{r}
-unzip("/Users/azeli/Documents/ADM/Tuto-DADA2/miseqsopdata.zip")
-path <- "/Users/azeli/Documents/ADM/Tuto-DADA2/MiSeq_SOP"
+path <- "/home/rstudio/tuto DADA2/Tuto-DADA2/MiSeq_SOP"
 list.files(path)
 ```
 
