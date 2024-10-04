@@ -371,13 +371,6 @@ ps
 plot_richness(ps, x="Day", measures=c("Shannon", "Simpson"), color="When")
 ```
 
-    ## Warning in estimate_richness(physeq, split = TRUE, measures = measures): The data you have provided does not have
-    ## any singletons. This is highly suspicious. Results of richness
-    ## estimates (for example) are probably unreliable, or wrong, if you have already
-    ## trimmed low-abundance taxa from the data.
-    ## 
-    ## We recommended that you find the un-trimmed data and retry.
-
 ![](Tutoriel-DADA2_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ``` r
