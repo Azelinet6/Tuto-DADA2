@@ -10,14 +10,14 @@ library(dada2)
 
 ```
 
-### Importation des données dans un objet
+### Importation des données dans un objet "path"
 
 ```{r}
 path <- "/home/rstudio/Tuto DADA 2/Tuto-DADA2/MiSeq_SOP"
 list.files(path)
 ```
 
-### Regroupement des forward et reverse
+### Regroupement des séquences forward et reverse
 
 ```{r}
 fnFs <- sort(list.files(path, pattern= "_R1_001.fastq", full.names = TRUE))
@@ -26,13 +26,17 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 plotQualityProfile(fnFs[1:2])
 ```
 
-*Graphique représentant les profils de qualité des séquences forward.*
+##### Graphique représentant les profils de qualité des séquences forward des deux premiers échantillons.
+
+Il est possible de voir que le score de qualité diminue pour les 10 dernières bases des séquences, pour les deux échantillons. 
 
 ```{r}
 plotQualityProfile(fnRs[1:2])
 ```
 
-*Graphique représentant les profils de qualité des séquences reverse.*
+##### Graphique représentant les profils de qualité des séquences reverse.
+
+Il est possible de voir que le score de qualité diminue fortement à partir d'environ la 160ème base pour les séquences des deux échantillons.
 
 ### Création d'un nouveau dossier "filtered" dans le directory et filtration des séquences
 
@@ -46,6 +50,8 @@ out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, m
 
 head(out)
 ```
+
+Ici, les séquences vont être filtrées selon plusieurs critères qui doivent affinés si un nombre trop impotant de séquences est enlevé du jeu de données. D'abord, la partie des séquences où le score de qualité a diminué, comme vu ci-dessus, va être supprimée. Les séquences forward vont être réduites à 240 bases, et les reverse à 160 bases. Toutes les séquences contenant un nucléotide N (maxN = 0) ou une base avec un score de qualité égal ou inférieur à 2 (truncQ = 2) seront enlevées du jeu de données. Les séquences forward et reverse pour lesquelles le nombre d'erreurs attendues calculé est supérieur à 2 seront également enlevées (maxEE = c(2,2)). Enfin, si une séquence match avec le génome de phiX, elle sera aussi supprimée (rm.phix = TRUE). 
 
 ### Création du modèle de calcul des erreurs à partir du jeu de données
 
