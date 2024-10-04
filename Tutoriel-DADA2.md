@@ -307,7 +307,7 @@ head(taxa.print)
     ## [5,] "Bacteroides"
     ## [6,] NA
 
-### Mesure de la précision de l’analyse
+### Evaluation de la précision de l’analyse
 
 ``` r
 unqs.mock <- seqtab.nochim["Mock",]
