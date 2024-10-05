@@ -7,7 +7,6 @@ output: github_document
 
 ```{r}
 library(dada2)
-
 ```
 
 ### Importation des données dans un objet "path"
@@ -34,7 +33,7 @@ Il est possible de voir que le score de qualité diminue pour les 10 dernières 
 plotQualityProfile(fnRs[1:2])
 ```
 
-##### Graphique représentant les profils de qualité des séquences reverse.
+##### Graphique représentant les profils de qualité des séquences reverse des deux premiers échantillons.
 
 Il est possible de voir que le score de qualité diminue fortement à partir d'environ la 160ème base pour les séquences des deux échantillons.
 
@@ -51,9 +50,10 @@ out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240, 160), maxN=0, m
 head(out)
 ```
 
-Ici, les séquences vont être filtrées selon plusieurs critères qui doivent affinés si un nombre trop impotant de séquences est enlevé du jeu de données. D'abord, la partie des séquences où le score de qualité a diminué, comme vu ci-dessus, va être supprimée. Les séquences forward vont être réduites à 240 bases, et les reverse à 160 bases. Toutes les séquences contenant un nucléotide N (maxN = 0) ou une base avec un score de qualité égal ou inférieur à 2 (truncQ = 2) seront enlevées du jeu de données. Les séquences forward et reverse pour lesquelles le nombre d'erreurs attendues calculé est supérieur à 2 seront également enlevées (maxEE = c(2,2)). Enfin, si une séquence match avec le génome de phiX, elle sera aussi supprimée (rm.phix = TRUE). 
+Ici, les séquences vont être filtrées selon plusieurs critères qui doivent affinés si un nombre trop impotant de séquences est enlevé du jeu de données. D'abord, la partie des séquences où le score de qualité a diminué, comme vu ci-dessus, va être supprimée. Les séquences forward vont être réduites à 240 bases, et les reverse à 160 bases. Toutes les séquences contenant un nucléotide N (maxN = 0) ou une base avec un score de qualité égal ou inférieur à 2 (truncQ = 2) seront enlevées du jeu de données. Les séquences forward et reverse pour lesquelles le nombre d'erreurs attendues calculé est supérieur à 2 seront également enlevées (maxEE = c(2,2)). Enfin, si une séquence match avec le génome de phiX, elle sera aussi supprimée (rm.phix = TRUE).
+L'objet "out" contient le nombre de séquences avant et après filtration pour chaque échantillon.
 
-### Création du modèle de calcul des erreurs à partir du jeu de données
+### Apprentissage des taux d'erreurs
 
 ```{r}
 errF <- learnErrors(filtFs, multithread = TRUE)
@@ -61,6 +61,7 @@ errR <- learnErrors(filtRs, multithread = TRUE)
 
 plotErrors(errF, nominalQ = TRUE)
 ```
+La fonction "learnErrors" permet de déterminer le taux d'erreur observé pour chaque transition de base possible en fonction du score de qualité dans le jeu de données. L'algorithme va alors calculer une estimation de chaque taux d'erreur (ligne noire) qui est censée suivre les taux observés. La ligne rouge correspond à la modélisation des erreurs attendues pour chaque score de qualité. Il est possible de voir que plus le score de qualité est élevé, plus le taux d'erreur est faible, sauf pour les transitions d'une base à une même base où il est maximal car plus le score de qualité est élevé plus la probabilité d'obtenir la même base est élevée. Seulement cette probabilité est ici modélisée comme une fréquence d'erreur. 
 
 ### Correction des erreurs et détection des vrais variants
 
@@ -70,6 +71,7 @@ dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 
 dadaFs[[1]]
 ```
+La fonction "dada" va alors utiliser le modèle d'erreur ci-dessus afin de corriger les erreurs de séquençage et détecter les vrais variants dans chaque échantillon. L'algorithme a détecté 1979 séquences uniques dans l'échantillon 1, dont 128 correspondent à des vrais variants.
 
 ### Alignement et fusion des séquences forward et reverse
 
@@ -78,16 +80,21 @@ mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
 
+La fonction "mergePairs" permet d'aligner le complément-inverse des séquences reverse avec les séquences forward, avant de les fusionner pour obtenir la séquence d'intérêt entière. La séquence fusionner sera conservée dans le jeu de données uniquement si la zone de chevauchement entre les séquences forward et reverse est identique, et si cette zone est de minimum 12 bases (ces paramètres peuvent être modifiés). 
+Ici le data.frame montre que dans le premier échantillon il y a 127 séquences différentes, c'est-à-dire un variant de moins qu'à l'étape d'avant. L'abondance de chacune d'elle dans l'échantillon est également indiquée. 
+
 ### Construction d'une table d'observation
 
 ```{r}
 seqtab <- makeSequenceTable(mergers)
 dim(seqtab)
 ```
+La fonction "makeSequenceTable" permet de créer une table d'observation des différents variants. La fonction "dim" permet de voir le nombres de lignes et de colonnes de cette table, respectivement 20 et 293 ici. Il y a donc 293 variants différents qui ont été identifiés en tout dans le jeu de données. 
 
 ```{r}
 table(nchar(getSequences(seqtab)))
 ```
+Ce code permet de voir la longueur de la séquence pour chaque variant. Il est possible de voir qu'elles tombent toutes dans la gamme de longueur pour la region V4 de l'ARN 16S. 
 
 ### Elimination des chimères
 
@@ -95,10 +102,10 @@ table(nchar(getSequences(seqtab)))
 seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=TRUE, verbose=TRUE)
 dim(seqtab.nochim)
 ```
-
 ```{r}
 sum(seqtab.nochim)/sum(seqtab)
 ```
+Ce chiffre correspond à la fraction de toutes les séquences fusionnées qui n'étaient pas des chimères, c'est-à-dire 96%. A ne pas confondre avec le pourcentage de variants du jeu de données qui étaient des chimères.
 
 ### Tableau récapitulatif du nombre de séquences enlevées à chaque étape
 
@@ -109,6 +116,7 @@ colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "n
 rownames(track) <- sample.names
 head(track)
 ```
+Ce tableau résume le nombre de séquences enlevées à chaque étape du pipeline pour l'ensemble des échantillons. La majorité des séquences ont été gardées.
 
 ### Taxonomie
 
@@ -119,7 +127,7 @@ row.names(taxa.print) <- NULL
 head(taxa.print)
 ```
 
-### Mesure de la précision de l'analyse
+### Précision de l'analyse
 
 ```{r}
 unqs.mock <- seqtab.nochim["Mock",]
